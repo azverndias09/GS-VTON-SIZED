@@ -561,35 +561,43 @@ class GaussianEditor_Video_Copy(BaseLift3DSystem):
         }
 
     def render_all_view(self, cache_name):
-        
-        
         cache_dir = os.path.join(self.cache_dir, cache_name)
         if os.path.exists(cache_dir) and self.cfg.cache_overwrite:
             shutil.rmtree(cache_dir)
                 
         os.makedirs(cache_dir, exist_ok=True)
+
         with torch.no_grad():
+            print("Available cameras:", len(self.trainer.datamodule.train_dataset.scene.cameras))
             for id in tqdm(self.view_list):
                 cur_path = os.path.join(cache_dir, "{:0>4d}.png".format(id))
+
                 if not os.path.exists(cur_path) or self.cfg.cache_overwrite:
-                    cur_cam = self.trainer.datamodule.train_dataset.scene.cameras[id]
+                    try:
+                        cur_cam = self.trainer.datamodule.train_dataset.scene.cameras[id]
+                    except IndexError:
+                        print(f"[ERROR] Tried to access camera index {id}, but only {len(self.trainer.datamodule.train_dataset.scene.cameras)} available.")
+                        continue
+
                     cur_batch = {
                         "index": id,
                         "camera": [cur_cam],
                         "height": self.trainer.datamodule.train_dataset.height,
                         "width": self.trainer.datamodule.train_dataset.width,
                     }
+
                     out = self(cur_batch)["comp_rgb"]
-                    # print('out:',out.shape)
                     out_to_save = (
-                            out[0].cpu().detach().numpy().clip(0.0, 1.0) * 255.0
+                        out[0].cpu().detach().numpy().clip(0.0, 1.0) * 255.0
                     ).astype(np.uint8)
                     out_to_save = cv2.cvtColor(out_to_save, cv2.COLOR_RGB2BGR)
                     cv2.imwrite(cur_path, out_to_save)
+
                 cached_image = cv2.cvtColor(cv2.imread(cur_path), cv2.COLOR_BGR2RGB)
                 self.origin_frames[id] = torch.tensor(
                     cached_image / 255, device="cuda", dtype=torch.float32
                 )[None]
+
                     
     @torch.no_grad()
     def utils_1111(self,category='up'):

@@ -94,7 +94,7 @@ def process_images(image_path, data_path, height, weight, description,enable_idm
     ])
     
     # Remove specific file
-    os.remove("./multi_first/grid.png")
+    # os.remove("./multi_first/grid.png")
 
     
 def run_realfill_pipeline(description):
