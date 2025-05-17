@@ -106,6 +106,11 @@ parser.add_argument(
     type=lambda x: str(x).lower() == 'true',
 )
 
+parser.add_argument(
+        '--multi_first_dir',
+        type=str,
+)
+
 args = parser.parse_args()
 
 
@@ -346,35 +351,86 @@ data_path = args.data_path_imgs
 
 
 
-import glob
-files_list=sorted(glob.glob(f'{data_path}/*'))
+# import glob
+# files_list=sorted(glob.glob(f'{data_path}/*'))
 
-files_list=files_list[::5]
+# files_list=files_list[::5]
+# random_files = random.sample(files_list, 4)
+
+# # Extract the numbers from the filenames
+# human_img_path = [int(f.split('_')[-1].split('.')[0]) for f in random_files]
+
+# Write the numbers to a text file
+# with open('./selected_numbers.txt', 'w') as f:
+#     for number in human_img_path:
+#         f.write(f"{number}\n")
+
+# print("Selected file numbers written to selected_numbers.txt")
+# human_img_path=random_files
+
+# os.makedirs('./multi_first', exist_ok=True)
+# shutil.rmtree('./multi_first')
+# os.makedirs('./multi_first', exist_ok=True)
+
+
+
+# image_out = virtual_tryon(human_img_path, garm_img_path, garment_desc,denoise_steps=22,seed=0)
+
+
+# for idx, img in enumerate(image_out):
+#     img.save(f'./multi_first/image_out_{idx}.png')
+
+# transform = transforms.ToTensor()
+# tensor_images = [transform(img) for img in image_out]
+# torchvision.utils.save_image(tensor_images, f'./multi_first/grid.png')
+import glob
+import os
+import random
+from pathlib import Path
+
+files_list = sorted(glob.glob(f'{data_path}/*'))
+
+files_list = files_list[::5]
 random_files = random.sample(files_list, 4)
 
 # Extract the numbers from the filenames
 human_img_path = [int(f.split('_')[-1].split('.')[0]) for f in random_files]
 
-# Write the numbers to a text file
-with open('./selected_numbers.txt', 'w') as f:
+# Get the current directory (which is stage1)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Write the numbers to a text file in the current directory
+with open(os.path.join(current_dir, 'selected_numbers.txt'), 'w') as f:
     for number in human_img_path:
         f.write(f"{number}\n")
 
 print("Selected file numbers written to selected_numbers.txt")
-human_img_path=random_files
-
-os.makedirs('./multi_first', exist_ok=True)
-shutil.rmtree('./multi_first')
-os.makedirs('./multi_first', exist_ok=True)
+human_img_path = random_files
+print("Current working directory:", os.getcwd())
 
 
+# Create multi_first directory in the stage1 directory
+# multi_first_dir = os.path.join(current_dir, 'multi_first')
 
-image_out = virtual_tryon(human_img_path, garm_img_path, garment_desc,denoise_steps=22,seed=0)
 
+multi_first_dir = args.multi_first_dir
+target_dir = os.path.join(multi_first_dir, 'target')
 
+# if not os.path.exists(multi_first_dir):
+#     os.makedirs(multi_first_dir, exist_ok=True)
+os.makedirs(target_dir, exist_ok=True)
+print(f"Created directories: {multi_first_dir} and {target_dir}")
+
+image_out = virtual_tryon(human_img_path, garm_img_path, garment_desc, denoise_steps=22, seed=0)
+
+# Save images to the target subdirectory
 for idx, img in enumerate(image_out):
-    img.save(f'./multi_first/image_out_{idx}.png')
+    save_path = os.path.join(target_dir, f'image_out_{idx}.png')
+    img.save(save_path)
+    print(f"Saved image to {save_path}")
 
 transform = transforms.ToTensor()
 tensor_images = [transform(img) for img in image_out]
-torchvision.utils.save_image(tensor_images, f'./multi_first/grid.png')
+grid_path = os.path.join(target_dir, 'grid.png')
+torchvision.utils.save_image(tensor_images, grid_path)
+print(f"Saved grid to {grid_path}")

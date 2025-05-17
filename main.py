@@ -94,15 +94,34 @@ def process_images(image_path, data_path, height, weight, description,enable_idm
     ])
     
     # Remove specific file
-    # os.remove("./multi_first/grid.png")
+    os.remove("./multi_first/grid.png")
 
     
+# def run_realfill_pipeline(description):
+#     """Run the realfill training pipeline"""
+#     subprocess.run([
+#         'accelerate', 'launch', './train_lora.py',
+#         '--pretrained_model_name_or_path', 'stabilityai/stable-diffusion-2-inpainting',
+#         '--train_data_dir', './multi_first',
+#         '--output_dir', './models/pipeline_captureddata-model',
+#         '--resolution', '512', '--train_batch_size', '16', '--gradient_accumulation_steps', '1',
+#         '--unet_learning_rate', '2e-4', '--text_encoder_learning_rate', '4e-5',
+#         '--lr_scheduler', 'constant', '--lr_warmup_steps', '100', '--max_train_steps', '1000', '--validation_steps', '100',
+#         '--lora_rank', '8', '--lora_dropout', '0.1', '--lora_alpha', '16',
+#         '--enable_xformers_memory_efficient_attention', '--seed', '0',
+#         f'--garm_desc_given={description}'
+#     ])
 def run_realfill_pipeline(description):
     """Run the realfill training pipeline"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    train_lora_path = os.path.join(script_dir, 'train_lora.py')
+    multi_first_dir = os.path.join(script_dir, 'stage1', 'multi_first')
+    if not os.path.exists(multi_first_dir):
+        os.makedirs(multi_first_dir)
     subprocess.run([
-        'accelerate', 'launch', './train_lora.py',
+        'accelerate', 'launch', train_lora_path, # Update path to train_lora.py
         '--pretrained_model_name_or_path', 'stabilityai/stable-diffusion-2-inpainting',
-        '--train_data_dir', './multi_first',
+        '--train_data_dir', multi_first_dir,  # Update path to multi_first
         '--output_dir', './models/pipeline_captureddata-model',
         '--resolution', '512', '--train_batch_size', '16', '--gradient_accumulation_steps', '1',
         '--unet_learning_rate', '2e-4', '--text_encoder_learning_rate', '4e-5',
@@ -110,7 +129,7 @@ def run_realfill_pipeline(description):
         '--lora_rank', '8', '--lora_dropout', '0.1', '--lora_alpha', '16',
         '--enable_xformers_memory_efficient_attention', '--seed', '0',
         f'--garm_desc_given={description}'
-    ])
+     ])
     
     
 def edit_gaussian_model(img_path, data_path, height, weight, gs_source, description,enable_ControlNet,enable_reInpaint,enable_attention,enable_limit,task_type):
